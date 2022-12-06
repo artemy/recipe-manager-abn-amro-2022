@@ -1,0 +1,203 @@
+openapi: "3.0.3"
+info:
+  version: 1.0.0
+  title: Recipe Manager
+servers:
+  - url: http://localhost:8080/
+paths:
+  /recipes:
+    get:
+      summary: List all recipes
+      operationId: getAllRecipes
+      parameters:
+        - in: query
+          name: vegetarian
+          schema:
+            type: boolean
+          description: Return only recipes with vegetarian ingredients
+        - in: query
+          name: includeIngredients
+          description: Return only recipes containing ingredients with specified names
+          schema:
+            type: array
+            minItems: 1
+            maxItems: 5
+            items:
+              type: string
+        - in: query
+          name: excludeIngredients
+          description: Return only recipes not containing ingredients with specified names
+          schema:
+            type: array
+            minItems: 1
+            maxItems: 5
+            items:
+              type: string
+        - in: query
+          name: instructions
+          description: Return only recipes with instructions containing given text
+          schema:
+            minLength: 1
+            type: string
+        - in: query
+          name: servings
+          description: Return only recipes for given amount servings
+          schema:
+            type: integer
+            format: int32
+      responses:
+        200:
+          description: List of recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/recipe"
+    post:
+      summary: Create a recipe
+      operationId: createRecipe
+      requestBody:
+        description: New recipe
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/new_recipe'
+      responses:
+        201:
+          description: Created recipe
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/recipe"
+  /recipes/{recipeId}:
+    get:
+      summary: Info for a specific recipe
+      operationId: getRecipeById
+      parameters:
+        - name: recipeId
+          in: path
+          required: true
+          description: The id of the recipe to retrieve
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/recipe"
+    put:
+      summary: Update a recipe
+      operationId: updateRecipe
+      parameters:
+        - name: recipeId
+          in: path
+          required: true
+          description: The id of the recipe to update
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Recipe to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/recipe'
+      responses:
+        200:
+          description: Updated recipe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/recipe'
+    delete:
+      summary: Delete a recipe
+      operationId: deleteRecipe
+      parameters:
+        - name: recipeId
+          in: path
+          required: true
+          description: The id of the recipe to delete
+          schema:
+            type: integer
+            format: int64
+      responses:
+        204:
+          description: Deleted recipe
+  /ingredients:
+    get:
+      summary: List all ingredients
+      operationId: getAllIngredients
+      responses:
+        200:
+          description: List of ingredients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ingredient"
+components:
+  schemas:
+    new_recipe:
+      type: object
+      required:
+        - name
+        - vegetarian
+        - instructions
+        - servings
+        - ingredients
+      properties:
+        name:
+          type: string
+          minLength: 5
+          maxLength: 75
+        vegetarian:
+          type: boolean
+        instructions:
+          type: string
+          minLength: 10
+          maxLength: 5000
+        servings:
+          type: integer
+          minimum: 1
+        ingredients:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ingredient"
+    recipe:
+      allOf:
+        - $ref: "#/components/schemas/new_recipe"
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+              format: int64
+    ingredient:
+      type: object
+      required:
+        - name
+        - amount
+        - unit
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 75
+        amount:
+          type: integer
+          minimum: 1
+        unit:
+          $ref: "#/components/schemas/unit"
+    unit:
+      type: string
+      enum: [ PIECE, MILLILITER, GRAM, TEASPOON, TABLESPOON ]

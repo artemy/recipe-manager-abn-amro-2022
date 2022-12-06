@@ -1,0 +1,21 @@
+version: '2'
+
+services:
+  recipe-manager:
+    image: 'recipe-manager:latest'
+    build:
+      context: .
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  db:
+    image: 'postgres:15.1-alpine'
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=recipes
